@@ -1,9 +1,9 @@
 // src/middlewares/auth.middleware.js
-const jwt = require("jsonwebtoken");
-const ApiError = require("../utils/ApiError");
-const User = require("../models/user.model");
+import jwt from "jsonwebtoken";
+import { ApiError } from "../utils/ApiError.js";
+import { User } from "../models/user.model.js"; // Correct import for ES Module named export
 
-const authMiddleware = async (req, res, next) => {
+const verifyJWT = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization || "";
     const token = authHeader.startsWith("Bearer ")
@@ -31,4 +31,4 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
-module.exports = authMiddleware;
+export { verifyJWT };
