@@ -1,22 +1,22 @@
 // src/routes/auth.routes.js
-const express = require("express");
-const {
+import { Router } from "express"; // Use import
+import {
   registerUser,
   loginUser,
   getCurrentUser,
   refreshAccessToken,
   logoutUser,
-} = require("../controllers/user.controller");
-const authMiddleware = require("../middlewares/auth.middleware");
+} from "../controllers/user.controller.js"; // Use import and include .js extension
+import { verifyJWT } from "../middlewares/auth.middleware.js"; // Use import and include .js extension
 
-const router = express.Router();
+const router = Router();
 
 router.post("/signup", registerUser);
 router.post("/login", loginUser);
 router.post("/refresh", refreshAccessToken);
 
 // protected routes
-router.get("/me", authMiddleware, getCurrentUser);
-router.post("/logout", authMiddleware, logoutUser);
+router.get("/me", verifyJWT, getCurrentUser); // Corrected middleware name from file (authMiddleware -> verifyJWT)
+router.post("/logout", verifyJWT, logoutUser); // Corrected middleware name
 
-module.exports = router;
+export default router; // Use default export

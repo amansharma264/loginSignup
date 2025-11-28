@@ -1,9 +1,10 @@
 // src/middlewares/error.middleware.js
-const ApiError = require("../utils/ApiError");
+import { ApiError } from "../utils/ApiError.js"; // Use import and include .js extension
 
 const errorMiddleware = (err, req, res, next) => {
   console.error("Error:", err);
 
+  // Check if the error is a custom ApiError instance
   if (err instanceof ApiError) {
     return res.status(err.statusCode).json({
       success: false,
@@ -12,6 +13,7 @@ const errorMiddleware = (err, req, res, next) => {
     });
   }
 
+  // Handle all other unhandled errors (500 Internal Server Error)
   return res.status(500).json({
     success: false,
     message: "Internal Server Error",
@@ -19,4 +21,4 @@ const errorMiddleware = (err, req, res, next) => {
   });
 };
 
-module.exports = errorMiddleware;
+export default errorMiddleware; // Use default export
