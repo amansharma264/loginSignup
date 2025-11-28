@@ -1,12 +1,12 @@
-// src/controllers/auth.controller.js
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const { v4: uuidv4 } = require("uuid");
+// src/controllers/user.controller.js
+import bcrypt from "bcrypt"; // Used 'bcrypt' from package.json instead of 'bcryptjs'
+import jwt from "jsonwebtoken";
+import { v4 as uuidv4 } from "uuid";
 
-const User = require("../models/user.model");
-const ApiError = require("../utils/ApiError");
-const ApiResponse = require("../utils/ApiResponse");
-const asyncHandler = require("../utils/asyncHandler");
+import { User } from "../models/user.model.js"; // Correct named import
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 const ACCESS_TOKEN_EXPIRY = process.env.ACCESS_TOKEN_EXPIRY || "1d";
@@ -22,7 +22,7 @@ const generateRefreshToken = (userId) =>
   });
 
 /**
- * POST /api/auth/signup
+ * POST /api/users/register
  */
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password, age, gender } = req.body;
@@ -52,12 +52,12 @@ const registerUser = asyncHandler(async (req, res) => {
   const accessToken = generateAccessToken(user.userId);
   const refreshToken = generateRefreshToken(user.userId);
 
-  // store refresh token in DB (optional)
+  // store refresh token in DB
   user.refreshToken = refreshToken;
   await user.save();
 
   return res.status(201).json(
-    new ApiResponse(true, "User registered successfully", {
+    new ApiResponse(201, {
       accessToken,
       refreshToken,
       user: {
@@ -67,12 +67,12 @@ const registerUser = asyncHandler(async (req, res) => {
         age: user.age,
         gender: user.gender,
       },
-    })
+    }, "User registered successfully")
   );
 });
 
 /**
- * POST /api/auth/login
+ * POST /api/users/login
  */
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
@@ -98,7 +98,7 @@ const loginUser = asyncHandler(async (req, res) => {
   await user.save();
 
   return res.json(
-    new ApiResponse(true, "Login successful", {
+    new ApiResponse(200, {
       accessToken,
       refreshToken,
       user: {
@@ -108,17 +108,17 @@ const loginUser = asyncHandler(async (req, res) => {
         age: user.age,
         gender: user.gender,
       },
-    })
+    }, "Login successful")
   );
 });
 
 /**
- * GET /api/auth/me  (protected)
+ * GET /api/users/current-user  (protected)
  */
 const getCurrentUser = asyncHandler(async (req, res) => {
   const u = req.user;
   return res.json(
-    new ApiResponse(true, "Current user", {
+    new ApiResponse(200, {
       user: {
         userId: u.userId,
         name: u.name,
@@ -130,12 +130,12 @@ const getCurrentUser = asyncHandler(async (req, res) => {
         smoker: u.smoker,
         riskSensitivity: u.riskSensitivity,
       },
-    })
+    }, "Current user")
   );
 });
 
 /**
- * POST /api/auth/refresh  (optional – refresh access token)
+ * POST /api/users/refresh-token  (optional – refresh access token)
  */
 const refreshAccessToken = asyncHandler(async (req, res) => {
   const { refreshToken } = req.body;
@@ -146,33 +146,56 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   // verify refresh token
   const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
   const user = await User.findOne({ userId: decoded.userId });
+  
   if (!user || user.refreshToken !== refreshToken) {
-    throw new ApiError(401, "Invalid refresh token");
+    // Attempt to clear a potentially stale/stolen token if user exists
+    if (user && user.refreshToken !== undefined) {
+        await User.updateOne({ userId: user.userId }, { $unset: { refreshToken: "" } });
+    }
+    throw new ApiError(401, "Invalid or expired refresh token");
   }
 
   const newAccessToken = generateAccessToken(user.userId);
 
   return res.json(
-    new ApiResponse(true, "Access token refreshed", {
+    new ApiResponse(200, {
       accessToken: newAccessToken,
-    })
+    }, "Access token refreshed")
   );
 });
 
 /**
- * POST /api/auth/logout
+ * POST /api/users/logout
  */
 const logoutUser = asyncHandler(async (req, res) => {
   const user = req.user;
   await User.updateOne({ userId: user.userId }, { $unset: { refreshToken: "" } });
 
-  return res.json(new ApiResponse(true, "Logged out successfully"));
+  return res.json(new ApiResponse(200, {}, "Logged out successfully"));
 });
 
-module.exports = {
+// Stubs for functions imported in user.routes.js but not defined here
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+  throw new ApiError(501, "changeCurrentPassword not implemented");
+});
+const updateAccountDetails = asyncHandler(async (req, res) => {
+  throw new ApiError(501, "updateAccountDetails not implemented");
+});
+const getUserPublicProfile = asyncHandler(async (req, res) => {
+  throw new ApiError(501, "getUserPublicProfile not implemented");
+});
+const getTravelHistory = asyncHandler(async (req, res) => {
+  throw new ApiError(501, "getTravelHistory not implemented");
+});
+
+export {
   registerUser,
   loginUser,
   getCurrentUser,
   refreshAccessToken,
   logoutUser,
+  changeCurrentPassword,
+  updateAccountDetails,
+  getUserPublicProfile,
+  getTravelHistory,
 };
