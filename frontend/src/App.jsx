@@ -1,5 +1,9 @@
 import './App.css'
 import { Link, Route, Routes, useNavigate } from 'react-router-dom'
+import HospitalsPage from './pages/HospitalsPage.jsx'
+import HospitalDetailPage from './pages/HospitalDetailPage.jsx'
+import AgentLogsPage from './pages/AgentLogsPage.jsx'
+import SimulationHistoryPage from './pages/SimulationHistoryPage.jsx'
 
 function HomeHero() {
   const navigate = useNavigate()
@@ -229,11 +233,12 @@ function App() {
 
         <nav className="nav-bar">
           <div className="nav-links">
-            <Link className="nav-link" to="/">Hospitals</Link>
+            <Link className="nav-link" to="/">Home</Link>
+            <Link className="nav-link" to="/hospitals">Hospitals</Link>
             <Link className="nav-link" to="/dashboard">Command Center</Link>
             <Link className="nav-link" to="/simulator">Simulator</Link>
-            <span className="nav-link">Agents</span>
-            <span className="nav-link">About</span>
+            <Link className="nav-link" to="/agents">Agents</Link>
+            <Link className="nav-link" to="/history">History</Link>
           </div>
           <div className="nav-search">
             <input placeholder="Search hospitals, cities, specialities" />
@@ -244,8 +249,12 @@ function App() {
 
       <Routes>
         <Route path="/" element={<HomeHero />} />
+        <Route path="/hospitals" element={<HospitalsPage />} />
+        <Route path="/hospitals/:id" element={<HospitalDetailPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/simulator" element={<SimulatorPage />} />
+        <Route path="/agents" element={<AgentLogsPage />} />
+        <Route path="/history" element={<SimulationHistoryPage />} />
       </Routes>
 
       <footer className="footer">
